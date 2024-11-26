@@ -1,4 +1,6 @@
 import { WebSocket, WebSocketServer } from 'ws';
+import http from 'http';
+import express from 'express';
 
 
 
@@ -7,10 +9,12 @@ interface UserWebSocket {
     receiverSocket: Socket
 }
 interface Socket extends WebSocket {
- RoomId:string
+    RoomId: string
 }
+const app = express();
+const server = http.createServer(app)
 
-const wss = new WebSocketServer({ port: 8080 });
+const wss = new WebSocketServer({ server: server });
 
 let senderSocket: null | Socket = null;
 let receiverSocket: null | Socket = null;
@@ -25,7 +29,7 @@ wss.on('connection', function connection(ws: Socket) {
             if (senderSocket) {
                 receiverSocket = ws
                 const Id = Date.now().toString()
-              
+
                 UserMap.set(Id, { receiverSocket, senderSocket })
                 if (receiverSocket && senderSocket) {
                     senderSocket.send(JSON.stringify({ type: "user", who: "sender", Id: Id }))
@@ -87,8 +91,28 @@ wss.on('connection', function connection(ws: Socket) {
             }
         }
     });
-    ws.on("close",(event)=>{
-console.log(event);
+    ws.on("close", () => {
+        for (const [key, userWebSocket] of UserMap.entries()) {
+               if (userWebSocket.senderSocket === ws || userWebSocket.receiverSocket === ws) {
+            
+                if (userWebSocket.receiverSocket == ws) {
+                    userWebSocket.receiverSocket?.send(JSON.stringify({type:"userDisConnect"}))
+                }else{
+                    userWebSocket.senderSocket?.send(JSON.stringify({type:"userDisConnect"}))
+                }
+                UserMap.delete(key);
+                
+                console.log(`Removed key: ${key} from UserMap`);
+                break; // Exit loop after deletion
+            }
+        }
+
 
     })
+});
+
+
+server.listen(3000, () => {
+    console.log("server listening on 3000");
+
 });
