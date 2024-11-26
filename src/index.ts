@@ -1,4 +1,6 @@
 import { WebSocket, WebSocketServer } from 'ws';
+import http from 'http';
+import express from 'express';
 
 
 
@@ -9,8 +11,10 @@ interface UserWebSocket {
 interface Socket extends WebSocket {
  RoomId:string
 }
+const app = express();
+const server=http.createServer(app)
 
-const wss = new WebSocketServer({ port: 8080 });
+const wss = new WebSocketServer({ server: server });
 
 let senderSocket: null | Socket = null;
 let receiverSocket: null | Socket = null;
@@ -91,4 +95,10 @@ wss.on('connection', function connection(ws: Socket) {
 console.log(event);
 
     })
+});
+
+
+server.listen(3000,()=>{
+console.log("server listening on 3000");
+
 });
