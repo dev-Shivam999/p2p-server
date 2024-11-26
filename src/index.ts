@@ -11,6 +11,8 @@ interface UserWebSocket {
 interface Socket extends WebSocket {
     RoomId: string
 }
+const app=express()
+const server=http.createServer(app)
 
 const wss = new WebSocketServer({ server: server });
 
@@ -107,4 +109,9 @@ wss.on('connection', function connection(ws: Socket) {
 
 
     })
+});
+
+server.listen(3000,()=>{
+    console.log("server listening on 3000");
+    
 });
